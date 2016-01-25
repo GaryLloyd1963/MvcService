@@ -4,10 +4,9 @@ using System.ServiceProcess;
 using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Hosting;
 using Microsoft.AspNet.Hosting.Internal;
-using Microsoft.AspNet.StaticFiles;
-using Microsoft.Framework.Configuration;
-using Microsoft.Framework.DependencyInjection;
-using Microsoft.Framework.Runtime;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.PlatformAbstractions;
 
 namespace MvcService
 {
@@ -39,9 +38,13 @@ namespace MvcService
 
         protected override void OnStart(string[] args)
         {
-            var config = new ConfigurationBuilder(new JsonConfigurationSource($@"{_applicationEnvironment.ApplicationBasePath}\config.json")).Build();
-     
-            var builder = new WebHostBuilder(_serviceProvider, config);
+            var config = new ConfigurationBuilder()
+                                    .SetBasePath(_applicationEnvironment.ApplicationBasePath)
+                                    .AddJsonFile($@"{_applicationEnvironment.ApplicationBasePath}\config.json")
+                                    .AddEnvironmentVariables()
+                                    .Build();
+
+            var builder = new WebHostBuilder(config);
             builder.UseServer("Microsoft.AspNet.Server.WebListener");
             builder.UseServices(services => services.AddMvc());
             builder.UseStartup(appBuilder =>
